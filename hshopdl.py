@@ -1,4 +1,3 @@
-from csv import field_size_limit
 import time
 
 import requests
@@ -9,17 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
-
-base_url = 'https://hshop.erista.me/'
-query_url = "%s/search?q=%s&c=%s&sc=%s"
-
-# Set options
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-options.add_argument("--test-type")
-options.add_argument('--headless')
-options.add_argument('--disable-gpu')
-options.binary_location = "/usr/bin/google-chrome-stable"
 
 
 def filesafe_name(filename):
@@ -94,6 +82,17 @@ def main():
 
 
 if __name__ == '__main__':
+    base_url = 'https://hshop.erista.me/'
+    query_url = "%s/search?q=%s&c=%s&sc=%s"
+
+    # Set options
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument("--test-type")
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.binary_location = "/usr/bin/google-chrome-stable"
+
     driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 3)
     region = "na"
