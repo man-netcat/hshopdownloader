@@ -1,3 +1,4 @@
+from csv import field_size_limit
 import time
 
 import requests
@@ -7,6 +8,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 
 base_url = 'https://hshop.erista.me/'
 query_url = "%s/search?q=%s&c=%s&sc=%s"
@@ -37,13 +39,15 @@ def load_page(url, wait_for_element):
 
 
 def download_rom(filename, rom_url):
-    print(filename)
-    print(rom_url)
     with requests.get(rom_url, stream=True) as r:
         r.raise_for_status()
+        field_size_limit = int(r.headers.get('content-length', 0))
+        progress_bar = tqdm(total=field_size_limit, unit='iB', unit_scale=True)
         with open(filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
+                progress_bar.update(len(chunk))
+        progress_bar.close()
 
 
 def process_game(game, subcat):
@@ -94,6 +98,6 @@ if __name__ == '__main__':
     wait = WebDriverWait(driver, 3)
     region = "na"
     search_query = "Etrian Odyssey"
-    search_query = "Shin Megami Tensei"
+    # search_query = "Shin Megami Tensei"
     subcats = ['games', 'updates', 'dlc']
     main()
