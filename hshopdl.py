@@ -1,4 +1,6 @@
+import argparse
 import time
+from os.path import exists
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,11 +29,15 @@ def load_page(url, wait_for_element):
 
 
 def download_rom(filename, rom_url):
+    dest = f"{config['dest']}/{filename}"
+    if exists(dest):
+        print("File already exists, skipping.")
+        return
     with requests.get(rom_url, stream=True) as r:
         r.raise_for_status()
         field_size_limit = int(r.headers.get('content-length', 0))
         progress_bar = tqdm(total=field_size_limit, unit='iB', unit_scale=True)
-        with open(filename, 'wb') as f:
+        with open(dest, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
                 progress_bar.update(len(chunk))
@@ -58,10 +64,10 @@ def process_game(game, subcat):
     download_rom(filename, rom_url)
 
 
-def process(search_query, subcats, region):
+def process(search_query, categories, region):
     # Make driver and wait for page to fully load
 
-    for subcat in subcats:
+    for subcat in categories:
         print(f"Processing Category: {subcat}")
         url = query_url % (base_url, search_query, subcat, region)
 
@@ -78,14 +84,27 @@ def process(search_query, subcats, region):
 
 
 def main():
-    process(search_query, subcats, region)
+    process(config['query'], categories, config['region'])
 
 
 if __name__ == '__main__':
     base_url = 'https://hshop.erista.me/'
     query_url = "%s/search?q=%s&c=%s&sc=%s"
 
-    # Set options
+    # Command line arguments
+    parser = argparse.ArgumentParser(description="HShop Downloader",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("query", help="Search Query")
+    parser.add_argument("-r", "--region", help="Region", default='na')
+    parser.add_argument("-c", "--cats", help="Categories",
+                        default='games updates dlc')
+    parser.add_argument(
+        "-d", "--dest", help="Download Destination Location", default='.')
+    args = parser.parse_args()
+    config = vars(args)
+    categories = config['cats'].split(' ')
+
+    # Set Options
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument("--test-type")
@@ -93,10 +112,8 @@ if __name__ == '__main__':
     options.add_argument('--disable-gpu')
     options.binary_location = "/usr/bin/google-chrome-stable"
 
+    # Init Webdriver
     driver = webdriver.Chrome(options=options)
     wait = WebDriverWait(driver, 3)
-    region = "na"
-    search_query = "Etrian Odyssey"
-    # search_query = "Shin Megami Tensei"
-    subcats = ['games', 'updates', 'dlc']
+
     main()
