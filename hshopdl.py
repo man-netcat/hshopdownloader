@@ -7,9 +7,12 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 
 def filesafe_name(filename):
@@ -104,16 +107,20 @@ if __name__ == '__main__':
     config = vars(args)
     categories = config['cats'].split(' ')
 
+    executable_path = EdgeChromiumDriverManager().install()
+
     # Set Options
-    options = webdriver.ChromeOptions()
+    options = Options()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument("--test-type")
     options.add_argument('--headless')
     options.add_argument('--disable-gpu')
-    options.binary_location = "/usr/bin/google-chrome-stable"
+
+    # Service
+    service = Service(executable_path=executable_path)
 
     # Init Webdriver
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Edge(service=service, options=options)
     wait = WebDriverWait(driver, 3)
 
     main()
